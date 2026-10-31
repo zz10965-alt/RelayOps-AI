@@ -44,3 +44,9 @@
 
 ## GitHub交付状态更新
 已获用户明确授权，将现有49个项目文件提交并推送至zz10965-alt/RelayOps-AI的main分支，包含原样ifpkg。此前“未推送”的条目是当时的历史状态；真实Dify与部署状态未改变，远端CI结果尚未核实。
+
+## 本次DeepSeek包修订（仅现有Workflow）
+按用户新要求替换官方DeepSeek/deepseek-flash；源码确认VISION与JSON模式，无native structured-output声明。启用文件/图片上传，严格JSON解析与条件分支，失败/低质量不进入resolve；完整结果需后端回读证据。BUSINESS_API_URL改为空的待配置变量，token保持Secret空值。
+本地全套73 passed/1既有依赖warning；业务API与React逐字节不变。Cloud导入、模型及E2E仍未验证。现有适配器对不调用resolve的早期分支仅记录通用handoff，具体原因见Dify日志；此次不更改。没有部署/发布/推送，新包在工作区，GitHub仍旧版。详见DIFY_PACKAGE_CHANGES.md。
+
+交付授权更新：用户后续明确同意上传DeepSeek新版与相关修改至GitHub；此前禁止推送/仅本地的状态已被此授权替代，Dify部署/发布仍不执行。

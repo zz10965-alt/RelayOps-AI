@@ -43,3 +43,14 @@ Phase 5 修复后：pytest 31 passed / 1 dependency warning，1.21s；Chromium E
 
 ## 用户授权上传 GitHub
 用户明确要求将现有项目文件上传至zz10965-alt/RelayOps-AI便于下载。检查origin身份与空仓库、排除秘密/数据库/依赖，49个文件完成初始提交b161a77并成功非强制推送至main。workflows/relayops.ifpkg保持3013字节，SHA256为baa758c047e6e4069f9c8bc7cdcda7dc6e324839c851e021d25485a772f35303，未重新生成或修改。原始用户文档中的Markdown行末双空格保留。此前“未推送”记载为历史状态。此次仅上传源码，不代表真实Dify验收、CI或外部服务部署完成。
+
+## DeepSeek工作流包修正
+用户确认Cloud配置deepseek-flash并显示VISION。读取官方插件manifest/provider/model（b4df0da commit），核实langgenius/deepseek/deepseek、版本源码0.0.26、vision、response_format=json_object；未声明structured-output。因此禁用native Structured，使用严格JSON字段/类型/有限值/重复键检查。
+原项目内替换生成器：Start必填单图片+file_upload/image启用；配置HTTPS门槛；订单/政策200检查；视觉证据门槛（模糊补图、不匹配/低分/无损坏转人工）；只有eligible进入resolve。LLM/HTTP/关键Code失败边转人工；resolve后核对case/order/created/匹配return_verify。保留现有业务规则/幂等/独立DB回读，backend和React源码4文件SHA256完全一致。
+全套pytest：73 passed, 1既有Starlette/httpx弃用warning, 2.21s。新增包CRC/manifest完整性和负面证据、异常响应测试。补充终端fallback节点不开放未连线fail端口后再次生成，准备复查。
+说明了现有适配器早期无resolve分支会记通用handoff而非完整补图理由；无后端修改，无假创建。更新DIFY_SETUP_GUIDE和DIFY_PACKAGE_CHANGES及来源证据。BUSINESS_API_URL/token都空，后者为Secret。未部署/发布/推送，Cloud兼容与模型调用未验证。
+
+最终包结构复核通过，5896字节，包SHA256=1b186b3e9966672f61c1e2f081f4a9d439dec65875010b5d9d9c64e771aa1bff；CRC、app.yaml实际长度与manifest哈希匹配。业务API与React仍逐字节不变；没有commit/push或部署。当前会话无可用附件导出工具，不能将工作区链接冒充已验证Windows下载入口；新版没有发布到GitHub。
+
+## 用户后续授权交付DeepSeek新版
+用户确认ok，授权将DeepSeek新版ifpkg及相关修改提交并推送至原仓库。远端main与本地基线40e37c5一致；包维持5896字节/SHA256 1b186b3e9966672f61c1e2f081f4a9d439dec65875010b5d9d9c64e771aa1bff，不重新生成。仅交付现有已测修改，不部署或发布Dify，不修改业务API/React，不把上传当成真实E2E通过。

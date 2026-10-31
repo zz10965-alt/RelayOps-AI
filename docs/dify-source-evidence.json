@@ -30,5 +30,21 @@
   "dify_source_commit": "dca4024e5777f44a8cc4937f898483c11ecbd62d",
   "source_dsl_version": "0.7.0",
   "graphon_commit": "7b5ce13216a47720727a5402aa2f3801372aedf0",
-  "note": "Official source evidence only; not the installed Cloud version, account authorization or live model test."
+  "note": "Official source evidence only; not the installed Cloud version, account authorization or live model test.",
+  "current_package": {
+    "provider": "langgenius/deepseek/deepseek",
+    "model": "deepseek-flash",
+    "plugin_source_version": "0.0.26",
+    "plugin_commit": "b4df0da33f8e6f0f4cde7b9250f317c1d69e2bb5",
+    "features": [
+      "vision",
+      "agent-thought",
+      "tool-call",
+      "multi-tool-call",
+      "stream-tool-call"
+    ],
+    "native_structured_output": false,
+    "response_format": "json_object",
+    "cloud_availability": "User reports configured VISION model; Codex has not logged into account or run it"
+  }
 }

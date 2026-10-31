@@ -1,6 +1,6 @@
 # 实际测试报告 — 2026-10-30
 
-最新Phase 4准备回归：**45 passed / 1依赖warning（1.30s）**，既有Chromium **2 passed（3.8s）**。下方保留此前阶段的历史证据；真实Dify始终未执行。
+最新DeepSeek包回归：**73 passed / 1既有依赖warning**。此前45项和Chromium结果为历史证据；本次业务API/React源码不变。真实Dify始终未执行。
 
 ## 本地已执行
 | 检查 | 实际结果 | 能证明的范围 |
@@ -40,3 +40,6 @@
 既有浏览器回归：2 passed，3.8s；冻结前端9个源/配置文件逐字节一致。Nginx模板未部署且未语法实测；不将模板当作HTTPS可达证据。
 
 最终扩充私网/IPv6回环URL预检后，全套45 passed，1 warning，1.30s。无外部服务调用、导入或部署证据。
+
+## DeepSeek应用包本次回归
+73 passed / 1既有依赖warning（2.21s），包含原业务测试、严格JSON与证据分流、错误HTTP/数据库回读证据、包manifest/CRC/SHA256。业务API/React源码哈希一致。真实Cloud导入、图片模型调用与E2E未执行；本次没有推送，GitHub仍是旧包。

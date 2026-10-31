@@ -27,7 +27,7 @@ Dify 未配置也能运行 UI 与业务查询；提交完整案件将明确转�
 详细页面入口、导入/模型/凭据、HTTPS安全边界与首轮验收见 **[DIFY_SETUP_GUIDE.md](DIFY_SETUP_GUIDE.md)**。
 
 - 当前Cloud文档使用`.ifpkg`应用包：优先导入`workflows/relayops.ifpkg`；裸`relayops.yml`保留用于接受DSL的页面。包结构/哈希只通过本地验证，目标Cloud导入尚未执行。
-- 官方OpenAI provider ID为`langgenius/openai/openai`；候选模型改为源码明确支持Vision和Structured Output的`gpt-4.1-mini`，你的插件/账户实际可用性仍需测试，未假设已安装成功。
+- 当前本地包已改为官方DeepSeek `langgenius/deepseek/deepseek` / `deepseek-flash`：源码确认Vision与json_object，原生Structured关闭，使用严格JSON校验及证据门槛。用户确认已配置Provider，Codex尚未真实运行。详见[DIFY_PACKAGE_CHANGES.md](DIFY_PACKAGE_CHANGES.md)。
 - 后端需要安全注入`DIFY_BASE_URL=https://api.dify.ai/v1`、该应用`DIFY_API_KEY`与实际秘密`DIFY_TOOL_TOKEN`。Dify Workflow需要`BUSINESS_API_URL`（Cloud可达HTTPS地址）和同值Secret `BUSINESS_API_TOKEN`。当前运行环境三项DIFY_*均未设置，当前出站allowlist也需追加api.dify.ai。
 - 本地loopback或host.docker.internal不是Cloud回调地址。本次只准备受限HTTPS网关模板，未部署/未开隧道。不要公开无用户认证的Dashboard或全部API。
 - 只读预检：`.venv/bin/python scripts/dify_preflight.py`；可选`--check-api`只读取Dify应用信息与参数，不调用模型。
@@ -56,3 +56,5 @@ OpenAPI：服务的 `/docs`。设计文档：[PRD](PRD.md)、[架构](ARCHITECTU
 单进程内部 Demo，没有用户身份、租户隔离、外部部署、持久后台队列、人工批准或退款接口。敏感数据不得上传。工具 Bearer token 与案件执行 token 双重校验；图片校验内容与5MiB上限；业务API幂等，不接受模型自行宣称完成。Dify HTTP 有界重试（最多两次），异常留证并转人工。调用耗时与内容 trace 仅作调试，本地操作员可见；生产部署前必须加权限与保留周期。
 
 源码已按用户明确授权提交并推送到 GitHub；未发布环境、未创建外网服务。物流/库存场景按要求延后。
+
+用户后续已明确授权上传DeepSeek应用包及相关修改；当前版本应以本次GitHub提交为准，旧OpenAI包保留在历史提交中。真实Dify导入与E2E仍未验证。
