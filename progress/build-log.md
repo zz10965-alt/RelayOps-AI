@@ -40,3 +40,6 @@ Phase 5 修复后：pytest 31 passed / 1 dependency warning，1.21s；Chromium E
 既有Chromium回归：2 passed，3.8s。冻结前端逐文件SHA256比对9/9完全一致。HTTPS预检追加拒绝私网/回环IP（含IPv6）；DNS公网可达性仍需从Cloud节点实测，不能由离线预检保证。
 
 最终回归：45 passed，1项既有Starlette/httpx弃用警告，1.30s；新增私网/IPv6回环预检分支通过。既有浏览器2 passed。已更新PLANS、README、workflow_design与测试报告，DIFY_SETUP_GUIDE含完整手动清单。最终前端再次哈希比对无变动。真实Dify导入/视觉调用/HTTPS回调/E2E仍未验证；按用户要求在完成凭据无关准备后暂停。
+
+## 用户授权上传 GitHub
+用户明确要求将现有项目文件上传至zz10965-alt/RelayOps-AI便于下载。检查origin身份与空仓库、排除秘密/数据库/依赖，49个文件完成初始提交b161a77并成功非强制推送至main。workflows/relayops.ifpkg保持3013字节，SHA256为baa758c047e6e4069f9c8bc7cdcda7dc6e324839c851e021d25485a772f35303，未重新生成或修改。原始用户文档中的Markdown行末双空格保留。此前“未推送”记载为历史状态。此次仅上传源码，不代表真实Dify验收、CI或外部服务部署完成。
