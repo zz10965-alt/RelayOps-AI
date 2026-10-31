@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "order_id": {
+      "type": "string"
+    },
+    "damaged": {
+      "type": "boolean"
+    },
+    "product_match": {
+      "type": "boolean"
+    },
+    "image_quality": {
+      "type": "string",
+      "enum": [
+        "clear",
+        "blurry",
+        "unrelated"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "order_id",
+    "damaged",
+    "product_match",
+    "image_quality",
+    "confidence",
+    "summary"
+  ]
+}

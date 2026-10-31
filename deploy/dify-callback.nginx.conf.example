@@ -1,0 +1,36 @@
+# REVIEW-ONLY TEMPLATE. Not installed, syntax-validated against a live Nginx, or deployed.
+# Place map in http context. This secret map is created OUTSIDE Git with mode 0600:
+# /etc/nginx/secrets/relayops-bearer.map contains: "Bearer <actual random tool token>" 1;
+map $http_authorization $relayops_callback_authorized {
+    default 0;
+    include /etc/nginx/secrets/relayops-bearer.map;
+}
+server {
+    listen 443 ssl;
+    server_name relayops-api.example.invalid; # replace with an owned, public DNS name
+    ssl_certificate /etc/letsencrypt/live/REPLACE/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/REPLACE/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    client_max_body_size 128k; # callback is JSON, not the image upload endpoint
+    # Avoid access/debug logging of headers or bodies. Dify run inputs contain execution tokens.
+    access_log off;
+    location = /api/policy {
+        if ($relayops_callback_authorized = 0) { return 401; }
+        limit_except GET { deny all; }
+        proxy_pass http://127.0.0.1:8000;
+    }
+    location ~ ^/api/orders/[A-Za-z0-9_-]+$ {
+        if ($relayops_callback_authorized = 0) { return 401; }
+        limit_except GET { deny all; }
+        proxy_pass http://127.0.0.1:8000;
+    }
+    location = /api/tools/resolve {
+        if ($relayops_callback_authorized = 0) { return 401; }
+        limit_except POST { deny all; }
+        proxy_read_timeout 65s;
+        proxy_pass http://127.0.0.1:8000;
+        # Preserve Authorization; backend also checks Bearer + per-case execution token.
+    }
+    # Never expose dashboard, /docs, /openapi.json, cases, metrics or returns publicly.
+    location / { return 404; }
+}
