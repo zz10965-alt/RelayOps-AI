@@ -50,3 +50,9 @@
 本地全套73 passed/1既有依赖warning；业务API与React逐字节不变。Cloud导入、模型及E2E仍未验证。现有适配器对不调用resolve的早期分支仅记录通用handoff，具体原因见Dify日志；此次不更改。没有部署/发布/推送，新包在工作区，GitHub仍旧版。详见DIFY_PACKAGE_CHANGES.md。
 
 交付授权更新：用户后续明确同意上传DeepSeek新版与相关修改至GitHub；此前禁止推送/仅本地的状态已被此授权替代，Dify部署/发布仍不执行。
+
+## Phase 7 / Module 1（2026-11-02）
+完成本地：新鲜合成订单、英文优先面试界面、三模块边界（2/3仅Planned）、真实事件五阶段、补图handoff适配、Docker/Railway/Vercel部署候选及公网默认禁用/鉴权/限流。79项Python、3项浏览器通过；本地Docker构建与PORT/卷重启功能验证通过。真实Dify/DeepSeek、远端CI及云部署未验证，Module 1整体未全部完成。详见docs/module1-review.md，停止等待用户验收，不开始Module 2/3。
+
+## Module 1最终预部署审查（2026-11-02）
+基线73项全部保留，79项基础上修复CORS错误响应、流式请求限制、启动路径/来源/token校验、回调竞争、非法run ID及真实验收脚本鉴权；最终97项Python、4项Chromium、Docker和构建检查通过。源码候选可交付审阅，GitHub远端CI/实际云部署/真实模型均未验证；不推送、不部署、不启用模型、不开始Module 2/3。详见docs/predeployment-review.md及精确29文件清单。

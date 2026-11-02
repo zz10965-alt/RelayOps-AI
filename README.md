@@ -58,3 +58,9 @@ OpenAPI：服务的 `/docs`。设计文档：[PRD](PRD.md)、[架构](ARCHITECTU
 源码已按用户明确授权提交并推送到 GitHub；未发布环境、未创建外网服务。物流/库存场景按要求延后。
 
 用户后续已明确授权上传DeepSeek应用包及相关修改；当前版本应以本次GitHub提交为准，旧OpenAI包保留在历史提交中。真实Dify导入与E2E仍未验证。
+
+## Module 1 面试演示与部署候选
+
+最新开发、测试证据、Railway/Vercel配置、授权边界及6分钟演示脚本见 [Module 1验收报告](docs/module1-review.md)。支持生成新鲜合成订单、英文优先UI和真实事件五阶段时间线；Module 2/3仅标记Planned。公网候选Docker默认启用鉴权且禁用案件执行，尚未部署或验证真实Dify/DeepSeek闭环。旧种子不刷新，重复演示请生成新订单。
+
+最终提交前复核见 [预部署报告](docs/predeployment-review.md)：基线73→上一轮79→本轮最终97项Python测试、4项Chromium通过；GitHub交付候选可审阅，真实部署与模型验收仍未完成。

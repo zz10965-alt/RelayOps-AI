@@ -8,14 +8,17 @@ import os
 import secrets
 import sqlite3
 import time
+from collections import deque
 from contextlib import asynccontextmanager, contextmanager
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 import httpx
-from fastapi import BackgroundTasks, FastAPI, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import BackgroundTasks, FastAPI, File, Form, Header, HTTPException, UploadFile, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -70,13 +73,145 @@ def init_db():
         con.execute("UPDATE cases SET status='handoff',reason='服务重启：上次执行中断，请人工核查',finished=?,execution_token=NULL WHERE status IN ('queued','running')", (time.time(),))
 
 
+def valid_https_origin(value):
+    try:
+        parsed = urlsplit(value)
+        return bool(parsed.scheme == 'https' and parsed.hostname and parsed.port != 0
+                    and not parsed.username and not parsed.password and not parsed.query
+                    and not parsed.fragment and parsed.path == '' and '*' not in value)
+    except ValueError:
+        return False
+
+
 @asynccontextmanager
 async def lifespan(app):
+    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1':
+        if not os.getenv('RELAYOPS_DEMO_TOKEN') or len(os.environ['RELAYOPS_DEMO_TOKEN']) < 32:
+            raise RuntimeError('Public demo requires a private operator token of at least 32 characters')
+        if not Path(DB).is_absolute() or not Path(DB).resolve().is_relative_to(Path('/data').resolve()):
+            raise RuntimeError('Public demo requires RELAYOPS_DB under /data/')
+        configured_origins = os.getenv('RELAYOPS_CORS_ORIGINS', '').split(',')
+        if not all(valid_https_origin(x.strip()) for x in configured_origins):
+            raise RuntimeError('Public demo requires explicit HTTPS frontend origins')
+    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and os.getenv('DIFY_TOOL_TOKEN'):
+        if len(os.environ['DIFY_TOOL_TOKEN']) < 32 or os.environ['DIFY_TOOL_TOKEN'] == os.environ['RELAYOPS_DEMO_TOKEN']:
+            raise RuntimeError('Public demo requires a distinct tool token of at least 32 characters')
+    if os.getenv('DIFY_BASE_URL'):
+        base = urlsplit(os.environ['DIFY_BASE_URL'])
+        if base.scheme != 'https' or not base.hostname or base.username or base.query or base.fragment:
+            raise RuntimeError('DIFY_BASE_URL must be an HTTPS API URL without credentials or query')
+        if not os.getenv('DIFY_API_KEY') or not os.getenv('DIFY_TOOL_TOKEN'):
+            raise RuntimeError('Dify configuration incomplete')
     init_db()
     yield
 
 
 app = FastAPI(title="RelayOps AI — Synthetic Operations API", lifespan=lifespan)
+
+
+origins = [x.strip() for x in os.getenv('RELAYOPS_CORS_ORIGINS', '').split(',') if x.strip()]
+submission_times = deque()
+
+
+@app.middleware('http')
+async def demo_guard(request: Request, call_next):
+    path = request.url.path
+    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and path != '/api/health' and request.method != 'OPTIONS':
+        expected = os.getenv('DIFY_TOOL_TOKEN', '') if path.startswith('/api/tools/') or path.startswith('/api/orders/') or path.startswith('/api/products/') or path == '/api/policy' or path.startswith('/api/returns/') else os.getenv('RELAYOPS_DEMO_TOKEN', '')
+        if not expected or not hmac.compare_digest(request.headers.get('authorization', '').encode(), ('Bearer ' + expected).encode()):
+            return JSONResponse({'detail': 'Operator authentication required'}, status_code=401)
+    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and path == '/api/cases' and request.method == 'POST' and os.getenv('RELAYOPS_ALLOW_MODEL_EXECUTION') != '1':
+        return JSONResponse({'detail': 'Public case execution disabled; owner approval required'}, status_code=403)
+    if request.method == 'POST' and path in ('/api/cases', '/api/demo/orders'):
+        now = time.monotonic()
+        while submission_times and submission_times[0] < now - 60:
+            submission_times.popleft()
+        if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1':
+            if len(submission_times) >= 10:
+                return JSONResponse({'detail': 'Demo request limit; retry after one minute'}, status_code=429)
+            submission_times.append(now)
+    return await call_next(request)
+
+
+class BodyLimitMiddleware:
+    """Bound both declared and streamed bodies before multipart/JSON parsing."""
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'http' or scope['method'] != 'POST' or not scope['path'].startswith('/api/'):
+            return await self.app(scope, receive, send)
+        headers = dict(scope['headers'])
+        try:
+            length = int(headers.get(b'content-length', b'0'))
+            if length < 0:
+                raise ValueError()
+        except ValueError:
+            return await JSONResponse({'detail': 'Invalid request length'}, status_code=400)(scope, receive, send)
+        limit = MAX_IMAGE + 65536
+        if length > limit:
+            return await JSONResponse({'detail': 'Request too large'}, status_code=413)(scope, receive, send)
+        chunks, size = [], 0
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                return
+            body = message.get('body', b'')
+            size += len(body)
+            if size > limit:
+                return await JSONResponse({'detail': 'Request too large'}, status_code=413)(scope, receive, send)
+            chunks.append(body)
+            if not message.get('more_body', False):
+                break
+        sent = False
+        async def replay():
+            nonlocal sent
+            if not sent:
+                sent = True
+                return {'type': 'http.request', 'body': b''.join(chunks), 'more_body': False}
+            return await receive()
+        await self.app(scope, replay, send)
+
+
+app.add_middleware(BodyLimitMiddleware)
+# CORS must wrap guards so browser clients can read 401/403/413/429 errors.
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET', 'POST'],
+                   allow_headers=['Authorization', 'Content-Type'])
+
+
+class DemoOrder(BaseModel):
+    scenario: Literal['eligible', 'expired', 'shipping'] = 'eligible'
+
+
+@app.post('/api/demo/orders', status_code=201)
+def fresh_order(body: DemoOrder):
+    ident = 'DEMO-' + secrets.token_hex(8).upper()
+    days = 45 if body.scenario == 'expired' else 3
+    with db() as con:
+        con.execute('INSERT INTO orders VALUES(?,?,?,?)',
+                    (ident, '白色陶瓷杯', 'shipping' if body.scenario == 'shipping' else 'delivered',
+                     None if body.scenario == 'shipping' else (date.today()-timedelta(days=days)).isoformat()))
+    return order(ident)
+
+
+def execution_stages(trace):
+    groups = [('Understand', ('analysis',)), ('Retrieve', ('order_lookup', 'policy_lookup')),
+              ('Decide', ('resolve',)), ('Act', ('return_create',)), ('Verify', ('return_verify',))]
+    stages = []
+    for name, steps in groups:
+        events = [e for e in trace if e['step'] in steps]
+        status = 'not_observed'
+        if events:
+            status = 'recorded' if name == 'Decide' else 'succeeded'
+            if name == 'Retrieve' and not all(any(e['step'] == step for e in events) for step in steps):
+                status = 'partial'
+            if any(not e['success'] for e in events):
+                status = 'failed'
+            elif name == 'Decide' and any(e['detail'].get('decision') == 'handoff' for e in events):
+                status = 'handoff'
+        descriptions = [str(e['detail'].get('reason') or e['detail'].get('summary') or e['detail'].get('error') or e['detail'].get('product') or e['detail'].get('status') or e['detail'].get('return_id') or e['step']) for e in events]
+        stages.append({'name': name, 'status': status, 'summary': ' · '.join(descriptions), 'events': events})
+    return stages
 
 
 def event(case_id, step, success, detail, duration_ms=0, valid=None):
@@ -104,6 +239,7 @@ def get_case(case_id):
         result['trace'] = [dict(r) for r in con.execute('SELECT * FROM events WHERE case_id=? ORDER BY id', (case_id,))]
         for item in result['trace']:
             item['detail'] = json.loads(item['detail'])
+        result['stages'] = execution_stages(result['trace'])
         result['policy'] = POLICY
         return result
 
@@ -129,7 +265,10 @@ class Resolve(BaseModel):
 def health():
     with db() as con:
         con.execute('SELECT 1').fetchone()
-    return {'status': 'ok', 'synthetic': True, 'dify_configured': bool(os.getenv('DIFY_BASE_URL') and os.getenv('DIFY_API_KEY') and os.getenv('DIFY_TOOL_TOKEN'))}
+    return {'status': 'ok', 'synthetic': True,
+            'public_demo': os.getenv('RELAYOPS_PUBLIC_DEMO') == '1',
+            'execution_enabled': os.getenv('RELAYOPS_PUBLIC_DEMO') != '1' or os.getenv('RELAYOPS_ALLOW_MODEL_EXECUTION') == '1',
+            'dify_configured': bool(os.getenv('DIFY_BASE_URL') and os.getenv('DIFY_API_KEY') and os.getenv('DIFY_TOOL_TOKEN'))}
 
 
 @app.get('/api/policy')
@@ -179,16 +318,21 @@ def case(case_id: str):
     return get_case(case_id)
 
 
+# Single-process demo: serialize short synchronous callback transactions; no await inside resolve.
 @app.post('/api/tools/resolve')
+async def resolve_endpoint(body: Resolve, authorization: str | None = Header(default=None)):
+    return resolve(body, authorization)
+
+
 def resolve(body: Resolve, authorization: str | None = Header(default=None)):
     tool_token = os.getenv('DIFY_TOOL_TOKEN', '')
-    if not tool_token or not hmac.compare_digest(authorization or '', 'Bearer ' + tool_token):
+    if not tool_token or not hmac.compare_digest((authorization or '').encode(), ('Bearer ' + tool_token).encode()):
         raise HTTPException(401, '工具鉴权失败')
     with db() as con:
         row = con.execute('SELECT * FROM cases WHERE id=?', (body.case_id,)).fetchone()
     if not row:
         raise HTTPException(404, '案件不存在')
-    if not row['execution_token'] or not hmac.compare_digest(row['execution_token'], body.execution_token):
+    if not row['execution_token'] or not hmac.compare_digest(row['execution_token'].encode(), body.execution_token.encode()):
         raise HTTPException(401, '案件执行凭据无效')
     if row['status'] not in ('running', 'application_created', 'handoff'):
         raise HTTPException(409, '案件未处于可执行状态')
@@ -293,8 +437,11 @@ async def run_workflow(case_id, image, filename, mime):
             if not isinstance(result, dict) or not isinstance(result.get('data'), dict):
                 raise ValueError('Dify运行响应不符合协议')
             data = result['data']
+            run_id = result.get('workflow_run_id') or data.get('id')
+            if run_id is not None and (not isinstance(run_id, str) or not run_id or len(run_id) > 256):
+                raise ValueError('Dify运行ID无效')
             with db() as con:
-                con.execute('UPDATE cases SET run_id=? WHERE id=?', (result.get('workflow_run_id') or data.get('id'), case_id))
+                con.execute('UPDATE cases SET run_id=? WHERE id=?', (run_id, case_id))
                 # Do not invent pricing; store only explicit nonnegative actual metadata.
                 metadata = data.get('metadata') or {}
                 if not isinstance(metadata, dict):
@@ -308,6 +455,20 @@ async def run_workflow(case_id, image, filename, mime):
             if data.get('status') != 'succeeded':
                 raise RuntimeError('Dify Workflow 未成功')
             current = get_case(case_id)
+            if current['status'] == 'running':
+                outputs = data.get('outputs')
+                raw = outputs.get('result') if isinstance(outputs, dict) else None
+                try:
+                    outcome = json.loads(raw) if isinstance(raw, str) else None
+                except (ValueError, TypeError):
+                    outcome = None
+                if isinstance(outcome, dict) and outcome.get('status') == 'handoff':
+                    reason = 'Workflow requested human review; no backend action verified'
+                    if outcome.get('requested_action') == 'provide_clear_photo':
+                        reason = 'Please supply a clear product photo; workflow requested human review'
+                    event(case_id, 'workflow_handoff', True, {'reason': reason})
+                    finish(case_id, 'handoff', reason)
+                    current = get_case(case_id)
             if current['status'] not in ('application_created', 'handoff'):
                 raise RuntimeError('Workflow 未产生经工具核验的结果')
             event(case_id, 'workflow', True, {'run_id': current['run_id'], 'status': data['status']})
@@ -343,6 +504,9 @@ async def create_case(background: BackgroundTasks,
     case_id = secrets.token_hex(12)
     missing = [name for name, value in [('问题描述', description), ('商品照片', content)] if not value]
     with db() as con:
+        con.execute('BEGIN IMMEDIATE')
+        if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and con.execute("SELECT count(*) FROM cases WHERE status IN ('queued','running')").fetchone()[0] >= 2:
+            raise HTTPException(429, 'Demo concurrency limit; retry later')
         con.execute('INSERT INTO cases(id,order_id,description,status,reason,created,finished) VALUES(?,?,?,?,?,?,?)',
                     (case_id, order_id, description, 'needs_information' if missing else 'queued',
                      '请补充：'+'、'.join(missing) if missing else None, time.time(), time.time() if missing else None))

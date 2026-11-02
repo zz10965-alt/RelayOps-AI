@@ -86,3 +86,30 @@ def test_retry_recovers_and_side_effect_is_idempotent(configured,monkeypatch):
     metrics=configured.get('/api/metrics').json()
     assert metrics['retried_cases']==1 and metrics['recovered_cases']==1
     with module.db() as con: assert con.execute('SELECT count(*) FROM returns').fetchone()[0]==1
+
+
+def test_cloud_supplement_reason_without_fabricated_action(configured, monkeypatch):
+    async def handler(request):
+        if request.url.path.endswith('files/upload'):
+            return httpx.Response(201,json={'id':'file'})
+        return httpx.Response(200,json={'workflow_run_id':'contract-supplement', 'data':{
+            'status':'succeeded','outputs':{'result':json.dumps({'status':'handoff','requested_action':'provide_clear_photo'})}}})
+    transport(monkeypatch,handler)
+    result=submit(configured)
+    assert result['status']=='handoff' and result['application'] is None
+    assert 'clear product photo' in result['reason']
+    assert result['analysis'] is None
+    assert all(s['status']=='not_observed' for s in result['stages'])
+
+
+@pytest.mark.parametrize('run_id', [['bad'], {'bad':'id'}])
+def test_malformed_run_id_handoffs(configured, monkeypatch, run_id):
+    async def handler(request):
+        if request.url.path.endswith('files/upload'):
+            return httpx.Response(201,json={'id':'file'})
+        return httpx.Response(200,json={'workflow_run_id':run_id,'data':{'status':'succeeded'}})
+    transport(monkeypatch,handler)
+    result=submit(configured)
+    assert result['status']=='handoff' and result['application'] is None
+    with module.db() as con:
+        assert con.execute('SELECT execution_token FROM cases WHERE id=?',(result['id'],)).fetchone()[0] is None

@@ -1,3 +1,5 @@
+> 最新预部署复核：97 Python passed、4 Chromium passed；详情见 [最终报告](../docs/predeployment-review.md)。以下73/79等数字为各阶段历史结果。
+
 # 实际测试报告 — 2026-10-30
 
 最新DeepSeek包回归：**73 passed / 1既有依赖warning**。此前45项和Chromium结果为历史证据；本次业务API/React源码不变。真实Dify始终未执行。
@@ -43,3 +45,8 @@
 
 ## DeepSeek应用包本次回归
 73 passed / 1既有依赖warning（2.21s），包含原业务测试、严格JSON与证据分流、错误HTTP/数据库回读证据、包manifest/CRC/SHA256。业务API/React源码哈希一致。真实Cloud导入、图片模型调用与E2E未执行；本次没有推送，GitHub仍是旧包。
+
+## Module 1 / Phase 7
+本轮本地Python79 passed（1既有依赖warning）、Chromium3 passed、tsc/Vite build、pip check、部署静态检查通过。本地Docker镜像构建和PORT/鉴权/默认禁执行/临时卷重启读回通过。HTTP替身契约不能证明模型执行；远端CI、实际部署和Dify/DeepSeek均未验证。命令、失败修正及边界见 [Module 1报告](../docs/module1-review.md)。
+
+最终补验：HTTPS VITE_API_BASE_URL构建及产物引用通过，HTTP地址被构建配置拒绝；同源本地构建已恢复。容器HTTPS来源CORS预检通过。Dify只读离线预检exit 2，实际三项DIFY变量缺失，未执行远端请求。

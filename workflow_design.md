@@ -12,3 +12,6 @@ Dify file upload 返回文件 id 后以 local_file 输入，模型 vision enable
 
 ## Phase 4 Cloud准备修订
 Cloud导入优先workflows/relayops.ifpkg；裸DSL维持0.3.0候选。官方源码版本0.7.0不是Cloud部署版本证据。实际图为Start→订单商品GET→政策GET→视觉原生Structured Output→完整JSON序列化→resolve→End。视觉模型候选gpt-4.1-mini已有官方插件源码证据。所有HTTP带Bearer，ssl_verify=true，timeout使用connect/read/write；HTTPS地址默认.invalid，不能误连本机。导入/配置步骤与限制以DIFY_SETUP_GUIDE.md为准，历史文本中的纯提示词输出已升级为原生Schema，但后端继续独立校验。
+
+## 当前部署候选说明（2026-11-02）
+前述OpenAI/native Structured段落为历史方案。当前包保持65aa556的官方DeepSeek/deepseek-flash、Vision、json_object与严格JSON解析，未启用原生Structured Output；实际节点/失败分支详见DIFY_PACKAGE_CHANGES.md。后端现已支持早期补清晰照片handoff提示，但不从workflow文本创建申请。真实Cloud兼容性与模型执行仍待验收。

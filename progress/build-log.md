@@ -54,3 +54,13 @@ Phase 5 修复后：pytest 31 passed / 1 dependency warning，1.21s；Chromium E
 
 ## 用户后续授权交付DeepSeek新版
 用户确认ok，授权将DeepSeek新版ifpkg及相关修改提交并推送至原仓库。远端main与本地基线40e37c5一致；包维持5896字节/SHA256 1b186b3e9966672f61c1e2f081f4a9d439dec65875010b5d9d9c64e771aa1bff，不重新生成。仅交付现有已测修改，不部署或发布Dify，不修改业务API/React，不把上传当成真实E2E通过。
+
+## Phase 7 / Module 1 本地开发与部署准备（2026-11-02）
+读取用户Module1附件及现有需求/架构/测试文档。实际HEAD=65aa556，起始git status/diff均为空，未发现附件所称27项未提交部署准备改动；无reset/覆盖/DB迁移。延续现有业务/DeepSeek配置完成新订单、英文UI、五阶段真实事件、早期补图handoff、部署候选和安全默认值。
+Python最终79 passed/1既有弃用warning；前端tsc/Vite通过；浏览器最初1通过2失败，修正英文选择器和异步等待后3 passed；Docker本机构建通过，临时无端口容器验证PORT8123、health、401、默认执行403、新订单/data重启持久化通过。临时容器/卷清理。部署静态检查和pip check通过。
+真实模型/Cloud部署/远端CI均未运行；Dify凭据与受控HTTPS回调仍缺，用户需提供适用真实图并完成安全配置/费用及发布审批。未推送/未开公网/未付费部署/未改生产secret。完整证据、操作清单、面试脚本及No-Go结论见docs/module1-review.md。到Module 1停止，等待用户审阅。
+
+最终补验：HTTPS VITE_API_BASE_URL构建及产物引用通过，HTTP地址被构建配置拒绝；同源本地构建已恢复。容器HTTPS来源CORS预检通过。Dify只读离线预检exit 2，实际三项DIFY变量缺失，未执行远端请求。
+
+## Module 1最终交付前审查（2026-11-02）
+只读确认GitHub main仍是65aa556；独立基线归档73 passed，原始测试node ID无删除。本轮开始79测试/21文件，无可复现的另一份92测试/27文件版本；fsck无不可达对象证据。修复安全/部署及真实验收脚本阻塞后最终97 Python passed、4 Chromium passed（其中1项health替身UI契约）。镜像PORT/CORS及401错误头/默认403/卷重启持久化通过，npm audit0公告，tsc/Vite/pip check/部署静态检查通过。候选同步命令曾因在非Git归档目录运行失败，已改用显式原仓库路径并重新同步验证；不把失败命令计为成功。精确文件和证据见docs/predeployment-review.md及predeployment-evidence.json。保持工作区/数据，未commit/push/部署/运行真实模型，停在Module 1待审阅。
