@@ -64,3 +64,7 @@ Python最终79 passed/1既有弃用warning；前端tsc/Vite通过；浏览器最
 
 ## Module 1最终交付前审查（2026-11-02）
 只读确认GitHub main仍是65aa556；独立基线归档73 passed，原始测试node ID无删除。本轮开始79测试/21文件，无可复现的另一份92测试/27文件版本；fsck无不可达对象证据。修复安全/部署及真实验收脚本阻塞后最终97 Python passed、4 Chromium passed（其中1项health替身UI契约）。镜像PORT/CORS及401错误头/默认403/卷重启持久化通过，npm audit0公告，tsc/Vite/pip check/部署静态检查通过。候选同步命令曾因在非Git归档目录运行失败，已改用显式原仓库路径并重新同步验证；不把失败命令计为成功。精确文件和证据见docs/predeployment-review.md及predeployment-evidence.json。保持工作区/数据，未commit/push/部署/运行真实模型，停在Module 1待审阅。
+
+## 统一双模式Module1（2026-11-03）
+读取新用户完整请求与既有需求/架构/计划/日志/源码/部署/测试，基线a9d07a1工作区干净。最小修改集中在前端DataClient：公开Simulation与私有Live分离，同一组件复用。Simulation全部内存Map、确定性fixtures与合成时钟，无API或SQLite写入。Live运行时HTTPS origin+操作者token、保护模式/认证双检查、重定向拒绝/超时/内存配置/断线明确/模式重建隔离；Windows本地存储显式开关保留public认证、安全执行门槛。
+99 Python passed/1既有弃用warning；8 Chromium passed（原Live流程、静态独立/断网模拟、0浏览器API、模拟不改真实库、跨域实际CORS/认证、错误token与不安全origin、断线显式/存储无秘密；其中一项health为UI契约替身）。首轮7/8，一项旧测试仍假设默认Live；改为显式连接后全通过。tsc/Vite、部署静态、pip check、本地Docker构建及容器PORT/鉴权/CORS/卷重启测试通过。官方免费条款页面403，记录为待确认，不声称核实最新免费额度。Windows/实际tunnel/静态公网发布/Dify模型未验证。可选Railway/Vercel配置与DeepSeek包/依赖锁逐字节保留，无DB迁移、无push、无付费或公开模型执行。指南含手动步骤、关闭顺序、6分钟演示及Go/No-Go，停止Module1待审阅。

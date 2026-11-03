@@ -1,5 +1,22 @@
 # RelayOps AI
 
+## 当前主方案：一个静态网站，两个明确模式
+
+默认 **Public Simulation** 是纯浏览器内存的交互式Damage & Returns演示：无需账号、后端、Dify或云数据库；所有证据/动作/时间/指标明确标注模拟，不发业务API请求。**Private Live** 使用同一React界面，在操作者私密输入当前HTTPS隧道origin和token后连接Windows上的既有FastAPI/SQLite；模型执行仍需后端单独批准，不会自动回退为模拟。
+
+独立启动公开模拟页面（仅本机，不是公开发布）：
+
+```bash
+npm --prefix web ci
+npm --prefix web run build
+npm --prefix web exec -- vite preview --host 127.0.0.1
+```
+
+使用终端显示的本机地址。默认不设置VITE_API_BASE_URL，不填写任何前端秘密。完整Windows、Dify、隧道、免费静态托管、关闭步骤和6分钟面试脚本见 **[统一双模式指南](docs/unified-demo-guide.md)**。本轮代码尚未推送或部署，真实Windows/tunnel/Dify验收未执行；Module 2/3仍为Planned。
+
+以下为保留的真实后端及可选Railway部署说明；先前测试/提交状态是对应阶段历史记录。
+
+
 多模态电商运营异常处理 Agent：商品损坏售后 MVP。FastAPI + SQLite 模拟业务系统，Dify Workflow 负责视觉提取与 HTTP 工具编排，React/TypeScript 提供运营 Dashboard。
 
 **当前状态：本地业务 API、Dify 协议契约与 Web Demo 已测试；真实 Dify 导入、视觉模型和远端端到端运行尚未验证。项目未达到全部完成标准。** 所有订单/商品/政策均为合成数据，不连接支付或真实商家。

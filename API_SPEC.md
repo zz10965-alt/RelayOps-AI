@@ -15,3 +15,6 @@
 - 案件详情新增 `stages`：Understand/Retrieve/Decide/Act/Verify，各自status/events，仅基于实际后端事件，not_observed不表示成功。
 - 公网候选模式：health匿名；案件/指标/新订单需要操作者Bearer；订单/商品/政策/申请/resolve使用工具Bearer。resolve仍需案件execution_token。
 - `RELAYOPS_PUBLIC_DEMO=1` 时验证私有token、HTTPS CORS与/data路径；`RELAYOPS_ALLOW_MODEL_EXECUTION`默认不启用，案件POST返回403。详细限制见docs/module1-review.md。
+
+## 统一双模式与本地Live
+公开Simulation在浏览器中实现，不增加或调用网络API，也不写SQLite。现有Live API路径不变。RELAYOPS_LOCAL_LIVE=1要求RELAYOPS_PUBLIC_DEMO=1，可使用绝对本地数据库路径；认证、工具/案件token、限流和执行开关不变。静态`/`与`/assets/`匿名可读（若构建存在），业务接口保持鉴权。生产HTTPS网页只接受运行时HTTPS origin，连接验证会先health再认证GET /api/cases；失败不进入Live。

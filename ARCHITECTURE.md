@@ -1,3 +1,21 @@
+# 当前统一双模式架构
+
+```mermaid
+flowchart LR
+ Public[同一静态React URL / 默认Simulation] --> Sim[纯浏览器确定性fixtures与内存Map]
+ Operator[同一React / 私有Live连接] -->|运行时HTTPS origin与操作者Bearer| Tunnel[临时HTTPS隧道]
+ Tunnel --> Local[Windows FastAPI + SQLite]
+ Local -->|服务端App Key| Dify[Dify Cloud + DeepSeek Vision]
+ Dify -->|工具Bearer + 案件token| Tunnel
+ Local --> Verify[独立SQLite读回]
+```
+
+前端DataClient将Simulation与Live隔离。默认模式不调用后端；模拟记录SIM-ID和合成时钟不可解释成真实执行。Live配置和token仅内存，验证后端保护模式与操作者权限后才切换；失败明确断线，不自动替换成模拟。刷新清除连接，断开中止在途请求，React重建模式界面避免跨模式迟到响应。
+
+本地后端通过RELAYOPS_LOCAL_LIVE=1允许绝对Windows数据库路径，但仍强制RELAYOPS_PUBLIC_DEMO=1、独立token、限流、执行门槛和既有幂等/读回。静态首页/编译资源可匿名访问，不开放业务记录。生产HTTPS网页仅能连接HTTPS后端；HTTP loopback仅用于本地开发。
+
+Railway/Vercel原配置逐字节保留为可选架构，不属于当前$0持续托管主方案。详细边界和手动步骤见docs/unified-demo-guide.md。以下保留既有Live系统架构说明。
+
 # 系统架构
 ```mermaid
 flowchart LR

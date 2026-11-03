@@ -83,15 +83,29 @@ def valid_https_origin(value):
         return False
 
 
+def valid_local_origin(value):
+    # Only loopback HTTP is permitted for local browser development; public static sites need HTTPS.
+    try:
+        parsed = urlsplit(value)
+        return bool(parsed.scheme == 'http' and parsed.hostname in ('127.0.0.1', 'localhost', '::1')
+                    and not parsed.username and not parsed.password and not parsed.query
+                    and not parsed.fragment and parsed.path == '' and parsed.port != 0)
+    except ValueError:
+        return False
+
+
 @asynccontextmanager
 async def lifespan(app):
+    local_live = os.getenv('RELAYOPS_LOCAL_LIVE') == '1'
+    if local_live and os.getenv('RELAYOPS_PUBLIC_DEMO') != '1':
+        raise RuntimeError('Local Live requires authenticated public-demo protections')
     if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1':
         if not os.getenv('RELAYOPS_DEMO_TOKEN') or len(os.environ['RELAYOPS_DEMO_TOKEN']) < 32:
             raise RuntimeError('Public demo requires a private operator token of at least 32 characters')
-        if not Path(DB).is_absolute() or not Path(DB).resolve().is_relative_to(Path('/data').resolve()):
+        if not Path(DB).is_absolute() or (not local_live and not Path(DB).resolve().is_relative_to(Path('/data').resolve())):
             raise RuntimeError('Public demo requires RELAYOPS_DB under /data/')
         configured_origins = os.getenv('RELAYOPS_CORS_ORIGINS', '').split(',')
-        if not all(valid_https_origin(x.strip()) for x in configured_origins):
+        if not all(valid_https_origin(x.strip()) or (local_live and valid_local_origin(x.strip())) for x in configured_origins):
             raise RuntimeError('Public demo requires explicit HTTPS frontend origins')
     if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and os.getenv('DIFY_TOOL_TOKEN'):
         if len(os.environ['DIFY_TOOL_TOKEN']) < 32 or os.environ['DIFY_TOOL_TOKEN'] == os.environ['RELAYOPS_DEMO_TOKEN']:
@@ -116,7 +130,7 @@ submission_times = deque()
 @app.middleware('http')
 async def demo_guard(request: Request, call_next):
     path = request.url.path
-    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and path != '/api/health' and request.method != 'OPTIONS':
+    if os.getenv('RELAYOPS_PUBLIC_DEMO') == '1' and path not in ('/', '/api/health') and not path.startswith('/assets/') and request.method != 'OPTIONS':
         expected = os.getenv('DIFY_TOOL_TOKEN', '') if path.startswith('/api/tools/') or path.startswith('/api/orders/') or path.startswith('/api/products/') or path == '/api/policy' or path.startswith('/api/returns/') else os.getenv('RELAYOPS_DEMO_TOKEN', '')
         if not expected or not hmac.compare_digest(request.headers.get('authorization', '').encode(), ('Bearer ' + expected).encode()):
             return JSONResponse({'detail': 'Operator authentication required'}, status_code=401)

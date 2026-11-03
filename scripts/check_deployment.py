@@ -14,4 +14,9 @@ for path in assets:
     text=path.read_text()
     for forbidden in ('DIFY_API_KEY','DIFY_TOOL_TOKEN','RELAYOPS_DEMO_TOKEN','app-test-only-secret','test-tool-secret'):
         assert forbidden not in text, f'Server-side marker found in {path.name}'
-print('Deployment static checks PASS; no server secret identifiers/test tokens in frontend bundle. Actual secret values and cloud deployment not verified.')
+simulation = (root/'web/src/simulation.ts').read_text()
+assert 'fetch(' not in simulation and 'XMLHttpRequest' not in simulation
+for path in ('web/src/data.ts','web/src/main.tsx'):
+    source = (root/path).read_text()
+    assert 'localStorage' not in source and 'sessionStorage' not in source
+print('Deployment static checks PASS; static simulation and memory-only connection checks passed; no server secret identifiers/test tokens in frontend bundle. Actual secret values and cloud deployment not verified.')

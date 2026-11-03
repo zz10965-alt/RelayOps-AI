@@ -56,3 +56,6 @@
 
 ## Module 1最终预部署审查（2026-11-02）
 基线73项全部保留，79项基础上修复CORS错误响应、流式请求限制、启动路径/来源/token校验、回调竞争、非法run ID及真实验收脚本鉴权；最终97项Python、4项Chromium、Docker和构建检查通过。源码候选可交付审阅，GitHub远端CI/实际云部署/真实模型均未验证；不推送、不部署、不启用模型、不开始Module 2/3。详见docs/predeployment-review.md及精确29文件清单。
+
+## 统一Public Simulation / Private Live（2026-11-03）
+按新授权在a9d07a1基础上本地完成Module1双模式：默认浏览器确定性Simulation（内存/无API/明确模拟），运行时私有Live连接（认证后切换/秘密仅内存/断线无自动替换），同一Dashboard与独立数据集；本地Live允许绝对Windows存储路径而不取消现有安全保护。保留Railway/Vercel文件为可选方案，2/3仍Planned。99 Python与8 Chromium、tsc/Vite、部署静态、依赖与本地Docker通过。Windows实机、真实tunnel/公网HTTPS/Dify/DeepSeek未验收；最新托管免费条款读取被403阻挡。详见docs/unified-demo-guide.md，未推送/发布/开通资源/运行模型，停Module1待审阅。

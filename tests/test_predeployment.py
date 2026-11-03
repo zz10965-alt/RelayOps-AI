@@ -55,3 +55,28 @@ def test_live_acceptance_separates_credentials():
     assert operator=={'Authorization':'Bearer operator-fixture'}
     assert tool=={'Authorization':'Bearer tool-fixture'} and proxy
     assert acceptance_headers('http://127.0.0.1:8000',{})==({},{},False)
+
+
+def test_local_live_still_requires_authentication(monkeypatch,tmp_path):
+    monkeypatch.setenv('RELAYOPS_LOCAL_LIVE','1')
+    monkeypatch.setenv('RELAYOPS_PUBLIC_DEMO','0')
+    monkeypatch.setattr(module,'DB',str(tmp_path/'local.sqlite3'))
+    with pytest.raises(RuntimeError,match='requires authenticated'):
+        with TestClient(module.app): pass
+
+
+def test_protected_local_storage_and_cors(monkeypatch,tmp_path):
+    monkeypatch.setenv('RELAYOPS_LOCAL_LIVE','1')
+    monkeypatch.setenv('RELAYOPS_PUBLIC_DEMO','1')
+    monkeypatch.setenv('RELAYOPS_DEMO_TOKEN','operator-fixture-'+'x'*32)
+    monkeypatch.setenv('RELAYOPS_CORS_ORIGINS','https://portfolio.example')
+    monkeypatch.setenv('RELAYOPS_ALLOW_MODEL_EXECUTION','0')
+    for name in ('DIFY_BASE_URL','DIFY_API_KEY','DIFY_TOOL_TOKEN'):monkeypatch.delenv(name,raising=False)
+    monkeypatch.setattr(module,'DB',str(tmp_path/'windows-local.sqlite3'))
+    with TestClient(module.app) as client:
+        assert client.get('/api/cases').status_code==401
+        assert client.get('/api/health').json()['execution_enabled'] is False
+        assert client.post('/api/cases',headers={'Authorization':'Bearer '+module.os.environ['RELAYOPS_DEMO_TOKEN']}).status_code==403
+    assert module.valid_local_origin('http://127.0.0.1:8003')
+    assert not module.valid_local_origin('http://remote.example')
+    assert not module.valid_local_origin('http://user@localhost:8003')

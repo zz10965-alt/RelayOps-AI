@@ -1,3 +1,5 @@
+> 当前双模式本地结果：99 Python、8 Chromium通过；详见[统一指南](../docs/unified-demo-guide.md)。以下97/79等为既有阶段记录。
+
 > 最新预部署复核：97 Python passed、4 Chromium passed；详情见 [最终报告](../docs/predeployment-review.md)。以下73/79等数字为各阶段历史结果。
 
 # 实际测试报告 — 2026-10-30
@@ -50,3 +52,12 @@
 本轮本地Python79 passed（1既有依赖warning）、Chromium3 passed、tsc/Vite build、pip check、部署静态检查通过。本地Docker镜像构建和PORT/鉴权/默认禁执行/临时卷重启读回通过。HTTP替身契约不能证明模型执行；远端CI、实际部署和Dify/DeepSeek均未验证。命令、失败修正及边界见 [Module 1报告](../docs/module1-review.md)。
 
 最终补验：HTTPS VITE_API_BASE_URL构建及产物引用通过，HTTP地址被构建配置拒绝；同源本地构建已恢复。容器HTTPS来源CORS预检通过。Dify只读离线预检exit 2，实际三项DIFY变量缺失，未执行远端请求。
+
+## 统一双模式当前本地验证（2026-11-03）
+- `.venv/bin/python -m pytest -q`：99 passed，1既有Starlette/httpx弃用warning。
+- `npm --prefix web run build`：TypeScript与Vite通过。
+- `npm --prefix web run test:e2e`：8 passed，首轮1个旧默认模式假设失败已修正；包括独立静态页面/断网模拟/无浏览器API/未改真实DB、实际本机跨域认证和无自动回退；一项health响应为UI契约替身。
+- `.venv/bin/python scripts/check_deployment.py`、`pip check`、`scripts/check_docs.py`和`git diff --check`通过。
+- Docker构建（保留代理CA/TLS）和`container_smoke.py`通过，无对外端口，临时卷清理。
+- 真实Windows、HTTPS隧道、公开静态平台、Dify/DeepSeek模型均未执行；verify #4是a9d07a1历史结果，不是当前未推送代码的CI。
+- 安全/预算/手动步骤见 [双模式指南](../docs/unified-demo-guide.md)。
