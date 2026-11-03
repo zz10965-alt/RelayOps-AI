@@ -50,7 +50,10 @@ if args.pages:
     for path in directory.rglob('*'):
         assert not path.is_symlink()
         if path.is_file():
-            assert path.suffix in ('.html', '.js', '.css'), path.name
+            assert path.suffix in ('.html', '.js', '.css', '.png'), path.name
+            if path.suffix == '.png':
+                assert path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'), path.name
+                continue
             text = path.read_text()
             assert not any(key in text for key in ('DIFY_API_KEY','DIFY_TOOL_TOKEN','RELAYOPS_DEMO_TOKEN','operator-test-fixture','test-tool-secret')), path.name
     workflow = yaml.load((root/'.github/workflows/pages.yml').read_text(), Loader=yaml.BaseLoader)

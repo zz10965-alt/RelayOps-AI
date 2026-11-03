@@ -62,3 +62,6 @@
 
 ## GitHub Pages准备（2026-11-03）
 按用户新选择增加独立github-pages模式，base=/RelayOps-AI/、dist-pages产物、手动main部署workflow及严格静态子路径测试。普通根构建/原8测试和后端/SQLite/Dify/其他部署选项保留。99 Python、8既有+2新增Chromium与双构建/部署检查通过；尚未推送/发布，不进行真实模型或Module2/3。操作步骤见docs/github-pages-deployment.md。
+
+## 中文四页UI/UX重设计（2026-11-03）
+以用户参考图为视觉结构，不采用其业务数据；本地实现首页、三步引导、真实记录五阶段、独立结果及中文运营/人工/评估页面。DataClient、模拟逻辑、后端/数据库、策略、安全控制和Pages配置不变。99 Python、9项根路径Chromium、2项Pages Chromium、双构建及部署检查通过，截图见docs/ui-redesign/README.md；不推送、不部署、不运行真实模型，不开始Module2/3，待用户审阅。

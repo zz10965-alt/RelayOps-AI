@@ -1,3 +1,5 @@
+> 当前中文UI审阅：99 Python、9项根路径Chromium、2项Pages Chromium及两种构建通过。截图及边界见[中文UI报告](../docs/ui-redesign/README.md)。以下为历史阶段记录。
+
 > 当前GitHub Pages准备：99 Python、既有8+新增Pages2项Chromium及双模式构建通过，未推送/发布。见[Pages报告](../docs/github-pages-deployment.md)。
 
 > 当前双模式本地结果：99 Python、8 Chromium通过；详见[统一指南](../docs/unified-demo-guide.md)。以下97/79等为既有阶段记录。

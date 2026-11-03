@@ -1,5 +1,10 @@
 # RelayOps AI
 
+## 中文四页UI/UX审阅版（本地，尚未推送/部署）
+
+按用户参考图重做深紫导航、浅色卡片和中文交互：首页→场景/信息/运行引导→五阶段执行→独立处理结果。数据仍来自原Simulation/Live适配器，不复制参考图订单/政策/成功状态。四页与移动端截图、改动和测试结果见[中文UI审阅](docs/ui-redesign/README.md)。
+
+
 ## 当前公开部署选择：GitHub Pages（待审阅，尚未发布）
 
 预计地址：`https://zz10965-alt.github.io/RelayOps-AI/`。Pages项目构建使用`npm --prefix web run build:pages`，base为`/RelayOps-AI/`，产物为`web/dist-pages`；普通`build`仍使用根路径和`web/dist`，保留Vercel/Railway选项。

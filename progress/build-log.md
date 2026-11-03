@@ -71,3 +71,8 @@ Python最终79 passed/1既有弃用warning；前端tsc/Vite通过；浏览器最
 
 ## GitHub Pages子路径部署准备（2026-11-03）
 工作区起始干净，HEAD=d876ee5。Vite按github-pages模式设置/RelayOps-AI/，普通根模式不变；build:pages与严格无fallback静态服务器/2项Pages浏览器测试隔离产物。手动workflow_dispatch仅main，build读取Pages配置、deploy最小写权限/OIDC，push不自动公开。原99 Python和8 Chromium全过；新增2项验证资产、301/刷新、离线0API的完整模拟业务及独立HTTPS API协议（替身，不是真实模型）。首轮发现浏览器默认/favicon.ico请求根路径404，加入内联图标后实际资产无此404；错误根资产探测仍有意404。两个模式tsc/Vite与部署检查通过。官方GitHub文档旧路径404，使用更新what-is-github-pages及gated-features/pages源码核实公开仓库Free可用性。未推送、未公开、未开隧道、未运行模型，未改业务数据，停Module1待审阅。
+
+## 中文UI/UX参考图重设计（2026-11-03）
+起始工作区干净、HEAD=a5e244f。按参考图组织四页：产品首页、三步引导、五阶段执行、独立结果；统一深紫导航、浅色卡片、线性SVG与中文可读文本。原数据/安全/模拟规则与部署配置字节保持，未使用设计图中的订单/商品/7天规则/成功状态。模拟即时返回不编造逐步进度，结果绿色核验仅基于匹配return_verify事件；技术JSON原文可展开。保留原8+Pages2场景，中文选择器/引导步骤相应迁移，新增四页/键盘/移动端与截图测试。首轮标题空格选择器失败已修正；390px导航确有10px溢出，检查DOM边界定位后改为五列，未隐藏横向溢出。最终99 Python/1既有warning、9根路径+2Pages浏览器、tsc/Vite两种构建及部署检查通过。8张PNG来自实际Simulation界面；无真实模型运行、真实凭据或用户数据。未commit/push/发布，未执行Module2/3，停供审阅。
+
+首页视觉反馈补充：用图像生成工具创作纸箱/封箱胶带/紫白机器人装饰插画，作为本地PNG打包，非业务证据；原图保留。9项界面+2项Pages、双构建与部署检查通过，PNG路径和解码受测试覆盖。未调用Dify/DeepSeek业务模型，未推送或部署。
