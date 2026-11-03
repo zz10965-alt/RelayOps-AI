@@ -1,5 +1,12 @@
 # RelayOps AI
 
+## 当前公开部署选择：GitHub Pages（待审阅，尚未发布）
+
+预计地址：`https://zz10965-alt.github.io/RelayOps-AI/`。Pages项目构建使用`npm --prefix web run build:pages`，base为`/RelayOps-AI/`，产物为`web/dist-pages`；普通`build`仍使用根路径和`web/dist`，保留Vercel/Railway选项。
+
+[GitHub Pages部署指南](docs/github-pages-deployment.md)包含免费资格、手动Actions发布、测试证据和精确CORS配置。`.github/workflows/pages.yml`仅手动触发，push本身不会公开网站。默认纯浏览器Simulation，不需要后端/凭据/模型；Private Live仍可在同一网页通过运行时HTTPS tunnel连接。
+
+
 ## 当前主方案：一个静态网站，两个明确模式
 
 默认 **Public Simulation** 是纯浏览器内存的交互式Damage & Returns演示：无需账号、后端、Dify或云数据库；所有证据/动作/时间/指标明确标注模拟，不发业务API请求。**Private Live** 使用同一React界面，在操作者私密输入当前HTTPS隧道origin和token后连接Windows上的既有FastAPI/SQLite；模型执行仍需后端单独批准，不会自动回退为模拟。

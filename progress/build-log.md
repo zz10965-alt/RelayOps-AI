@@ -68,3 +68,6 @@ Python最终79 passed/1既有弃用warning；前端tsc/Vite通过；浏览器最
 ## 统一双模式Module1（2026-11-03）
 读取新用户完整请求与既有需求/架构/计划/日志/源码/部署/测试，基线a9d07a1工作区干净。最小修改集中在前端DataClient：公开Simulation与私有Live分离，同一组件复用。Simulation全部内存Map、确定性fixtures与合成时钟，无API或SQLite写入。Live运行时HTTPS origin+操作者token、保护模式/认证双检查、重定向拒绝/超时/内存配置/断线明确/模式重建隔离；Windows本地存储显式开关保留public认证、安全执行门槛。
 99 Python passed/1既有弃用warning；8 Chromium passed（原Live流程、静态独立/断网模拟、0浏览器API、模拟不改真实库、跨域实际CORS/认证、错误token与不安全origin、断线显式/存储无秘密；其中一项health为UI契约替身）。首轮7/8，一项旧测试仍假设默认Live；改为显式连接后全通过。tsc/Vite、部署静态、pip check、本地Docker构建及容器PORT/鉴权/CORS/卷重启测试通过。官方免费条款页面403，记录为待确认，不声称核实最新免费额度。Windows/实际tunnel/静态公网发布/Dify模型未验证。可选Railway/Vercel配置与DeepSeek包/依赖锁逐字节保留，无DB迁移、无push、无付费或公开模型执行。指南含手动步骤、关闭顺序、6分钟演示及Go/No-Go，停止Module1待审阅。
+
+## GitHub Pages子路径部署准备（2026-11-03）
+工作区起始干净，HEAD=d876ee5。Vite按github-pages模式设置/RelayOps-AI/，普通根模式不变；build:pages与严格无fallback静态服务器/2项Pages浏览器测试隔离产物。手动workflow_dispatch仅main，build读取Pages配置、deploy最小写权限/OIDC，push不自动公开。原99 Python和8 Chromium全过；新增2项验证资产、301/刷新、离线0API的完整模拟业务及独立HTTPS API协议（替身，不是真实模型）。首轮发现浏览器默认/favicon.ico请求根路径404，加入内联图标后实际资产无此404；错误根资产探测仍有意404。两个模式tsc/Vite与部署检查通过。官方GitHub文档旧路径404，使用更新what-is-github-pages及gated-features/pages源码核实公开仓库Free可用性。未推送、未公开、未开隧道、未运行模型，未改业务数据，停Module1待审阅。

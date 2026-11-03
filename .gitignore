@@ -11,3 +11,5 @@ web/playwright-report/
 
 .env.*
 !.env.example
+
+web/dist-pages/

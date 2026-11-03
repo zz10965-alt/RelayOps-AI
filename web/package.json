@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:pages": "tsc --noEmit && vite build --mode github-pages --outDir dist-pages",
+    "test:pages": "playwright test --config playwright.pages.config.ts"
   },
   "dependencies": {
     "react": "19.1.0",

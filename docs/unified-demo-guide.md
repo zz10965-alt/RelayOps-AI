@@ -1,3 +1,5 @@
+> 最新托管选择是GitHub Pages，见[Pages部署准备](github-pages-deployment.md)。下文Cloudflare/Vercel作为保留备选；双模式与Windows安全步骤继续适用，实际Pages CORS来源为`https://zz10965-alt.github.io`。
+
 # Module 1：同一静态网站的 Public Simulation / Private Live
 
 ## 当前结论与授权

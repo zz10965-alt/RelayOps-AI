@@ -28,5 +28,10 @@ jobs:
         working-directory: web
       - run: npm run test:e2e
         working-directory: web
+      - run: npm run build:pages
+        working-directory: web
+      - run: npm run test:pages
+        working-directory: web
+      - run: .venv/bin/python scripts/check_deployment.py --pages
       - run: docker build -t relayops-module1:local .
       - run: .venv/bin/python scripts/container_smoke.py

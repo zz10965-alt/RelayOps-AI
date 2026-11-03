@@ -59,3 +59,6 @@
 
 ## 统一Public Simulation / Private Live（2026-11-03）
 按新授权在a9d07a1基础上本地完成Module1双模式：默认浏览器确定性Simulation（内存/无API/明确模拟），运行时私有Live连接（认证后切换/秘密仅内存/断线无自动替换），同一Dashboard与独立数据集；本地Live允许绝对Windows存储路径而不取消现有安全保护。保留Railway/Vercel文件为可选方案，2/3仍Planned。99 Python与8 Chromium、tsc/Vite、部署静态、依赖与本地Docker通过。Windows实机、真实tunnel/公网HTTPS/Dify/DeepSeek未验收；最新托管免费条款读取被403阻挡。详见docs/unified-demo-guide.md，未推送/发布/开通资源/运行模型，停Module1待审阅。
+
+## GitHub Pages准备（2026-11-03）
+按用户新选择增加独立github-pages模式，base=/RelayOps-AI/、dist-pages产物、手动main部署workflow及严格静态子路径测试。普通根构建/原8测试和后端/SQLite/Dify/其他部署选项保留。99 Python、8既有+2新增Chromium与双构建/部署检查通过；尚未推送/发布，不进行真实模型或Module2/3。操作步骤见docs/github-pages-deployment.md。

@@ -1,3 +1,5 @@
+> 当前GitHub Pages准备：99 Python、既有8+新增Pages2项Chromium及双模式构建通过，未推送/发布。见[Pages报告](../docs/github-pages-deployment.md)。
+
 > 当前双模式本地结果：99 Python、8 Chromium通过；详见[统一指南](../docs/unified-demo-guide.md)。以下97/79等为既有阶段记录。
 
 > 最新预部署复核：97 Python passed、4 Chromium passed；详情见 [最终报告](../docs/predeployment-review.md)。以下73/79等数字为各阶段历史结果。
