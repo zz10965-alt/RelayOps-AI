@@ -14,9 +14,14 @@ def verify(path,case_id):
         row=con.execute('SELECT id,order_id,status FROM returns WHERE id=?',(case['return_id'],)).fetchone()
         if not row or row['order_id']!=case['order_id'] or row['status']!='created':
             raise ValueError('Application database state does not match')
-        events=con.execute('SELECT step,success FROM events WHERE case_id=?',(case_id,)).fetchall()
+        events=con.execute('SELECT step,success,detail FROM events WHERE case_id=?',(case_id,)).fetchall()
         for step in ('return_create','return_verify','workflow'):
-            if not any(e['step']==step and e['success'] for e in events): raise ValueError('Missing successful '+step)
+            matches = [json.loads(e['detail']) for e in events if e['step']==step and e['success']]
+            if step == 'workflow':
+                valid = any(e.get('run_id') == case['run_id'] and e.get('status') == 'succeeded' for e in matches)
+            else:
+                valid = any(e.get('id') == row['id'] and e.get('order_id') == case['order_id'] and e.get('status') == 'created' for e in matches)
+            if not valid: raise ValueError('Missing matching successful '+step)
         return dict(row)
 
 

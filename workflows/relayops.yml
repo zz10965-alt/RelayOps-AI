@@ -355,10 +355,10 @@ workflow:
           \            raise ValueError('duplicate key')\n        result[key] = value\n\
           \    return result\n\n\ndef reject_constant(value):\n    raise ValueError('non-finite\
           \ JSON number')\n\n\ndef main(text: str, order_id: str, case_id: str, execution_token:\
-          \ str) -> dict:\n    output = {'route': 'handoff', 'body': '', 'reason':\
-          \ '模型JSON无效，需要人工核查'}\n    try:\n        if not isinstance(text, str) or\
-          \ not 1 <= len(text) <= 6000:\n            return output\n        text =\
-          \ text.strip()\n        if text.startswith('```json\\n') and text.endswith('\\\
+          \ str) -> dict:\n    output = {'route': 'handoff', 'body': '', 'analysis':\
+          \ '', 'reason': '模型JSON无效，需要人工核查'}\n    try:\n        if not isinstance(text,\
+          \ str) or not 1 <= len(text) <= 6000:\n            return output\n     \
+          \   text = text.strip()\n        if text.startswith('```json\\n') and text.endswith('\\\
           n```'):\n            text = text[8:-4]\n        data = json.loads(text,\
           \ object_pairs_hook=unique_object, parse_constant=reject_constant)\n   \
           \     fields = {'order_id', 'damaged', 'product_match', 'image_quality',\
@@ -373,8 +373,9 @@ workflow:
           \ if type(score) not in (int, float) or not math.isfinite(score) or not\
           \ 0 <= score <= 1:\n            return output\n        if not case_id or\
           \ len(case_id) > 80 or not execution_token or len(execution_token) > 128:\n\
-          \            return output\n        if data['order_id'] != order_id:\n \
-          \           output['reason'] = '订单号冲突，转人工'\n        elif data['image_quality']\
+          \            return output\n        output['analysis'] = json.dumps(data,\
+          \ ensure_ascii=False, allow_nan=False)\n        if data['order_id'] != order_id:\n\
+          \            output['reason'] = '订单号冲突，转人工'\n        elif data['image_quality']\
           \ == 'blurry':\n            output.update(route='supplement', reason='照片模糊，请补充清晰商品照片；不执行退货')\n\
           \        elif data['image_quality'] != 'clear' or not data['product_match']:\n\
           \            output['reason'] = '照片无关或商品不匹配，转人工；不执行退货'\n        elif not\
@@ -408,6 +409,9 @@ workflow:
             type: string
             children: null
           body:
+            type: string
+            children: null
+          analysis:
             type: string
             children: null
           reason:
@@ -517,9 +521,10 @@ workflow:
           \ != 'created':\n            return failed\n        if not any(isinstance(e,\
           \ dict) and e.get('step') == 'return_verify' and e.get('success') == 1\n\
           \                   and isinstance(e.get('detail'), dict) and e['detail'].get('id')\
-          \ == application['id']\n                   and e['detail'].get('status')\
-          \ == 'created' for e in data.get('trace', [])):\n            return failed\n\
-          \        return {'verified': 'yes', 'result': json.dumps(data, ensure_ascii=False)}\n\
+          \ == application['id']\n                   and e['detail'].get('order_id')\
+          \ == order_id\n                   and e['detail'].get('status') == 'created'\
+          \ for e in data.get('trace', [])):\n            return failed\n        return\
+          \ {'verified': 'yes', 'result': json.dumps(data, ensure_ascii=False)}\n\
           \    except (ValueError, TypeError, AttributeError):\n        return failed\n"
         variables:
         - variable: body
@@ -604,14 +609,23 @@ workflow:
       targetPosition: left
       data:
         type: code
-        title: 请求补充清晰照片并交接
+        title: 保留拒绝证据并请求人工处理
         desc: ''
         selected: false
         code_language: python3
-        code: "import json\ndef main() -> dict:\n    return {\"result\":json.dumps({\"\
-          status\":\"handoff\",\"requested_action\":\"provide_clear_photo\",\"reason\"\
-          :\"照片模糊，请补充清晰商品照片；未执行退货\",\"application\":None},ensure_ascii=False)}"
-        variables: []
+        code: "import json\ndef main(analysis: str = '', route: str = 'supplement')\
+          \ -> dict:\n    result={'status':'handoff','application':None}\n    if analysis:\n\
+          \        result['analysis']=json.loads(analysis)\n    if route=='supplement':\n\
+          \        result['requested_action']='provide_clear_photo'\n    return {'result':json.dumps(result,ensure_ascii=False)}"
+        variables:
+        - variable: analysis
+          value_selector:
+          - parse
+          - analysis
+        - variable: route
+          value_selector:
+          - parse
+          - route
         outputs:
           result:
             type: string
@@ -817,9 +831,9 @@ workflow:
         sourceType: if-else
         targetType: code
         isInIteration: false
-    - id: evidence-false-manual
+    - id: evidence-false-supplement
       source: evidence
-      target: manual
+      target: supplement
       sourceHandle: 'false'
       targetHandle: target
       type: custom

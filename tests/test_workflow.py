@@ -107,6 +107,8 @@ def test_result_checker_requires_matching_backend_readback():
         assert main(json.dumps({**data,**changed}),200,'case','DEMO-1001')['verified']=='no'
     assert main(json.dumps(data),500,'case','DEMO-1001')['verified']=='no'
     assert main('not JSON',200,'case','DEMO-1001')['verified']=='no'
+    data['trace'][0]['detail']['order_id']='DIFFERENT'
+    assert main(json.dumps(data),200,'case','DEMO-1001')['verified']=='no'
 
 
 def test_manual_and_supplement_results_never_claim_creation():

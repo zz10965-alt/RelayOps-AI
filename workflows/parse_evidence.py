@@ -17,7 +17,7 @@ def reject_constant(value):
 
 
 def main(text: str, order_id: str, case_id: str, execution_token: str) -> dict:
-    output = {'route': 'handoff', 'body': '', 'reason': '模型JSON无效，需要人工核查'}
+    output = {'route': 'handoff', 'body': '', 'analysis': '', 'reason': '模型JSON无效，需要人工核查'}
     try:
         if not isinstance(text, str) or not 1 <= len(text) <= 6000:
             return output
@@ -41,6 +41,7 @@ def main(text: str, order_id: str, case_id: str, execution_token: str) -> dict:
             return output
         if not case_id or len(case_id) > 80 or not execution_token or len(execution_token) > 128:
             return output
+        output['analysis'] = json.dumps(data, ensure_ascii=False, allow_nan=False)
         if data['order_id'] != order_id:
             output['reason'] = '订单号冲突，转人工'
         elif data['image_quality'] == 'blurry':

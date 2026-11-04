@@ -79,6 +79,15 @@ def test_policy_and_order_failures(client, order, reason):
     assert result['status'] == 'handoff' and reason in result['reason']
 
 
+def test_corrupt_delivery_date_fails_closed_without_mutating_order(client):
+    with module.db() as con:
+        con.execute("UPDATE orders SET delivered_on='not-a-date' WHERE id='DEMO-1001'")
+    result = resolve(client, pending(client)).json()
+    assert result['status'] == 'handoff' and '日期无效' in result['reason']
+    assert result['application'] is None
+    assert client.get('/api/orders/DEMO-1001').json()['delivered_on'] == 'not-a-date'
+
+
 @pytest.mark.parametrize('data', [{}, {'confidence':4}, {'damaged':'true'}, {'extra':'injection'}, {'confidence':float('nan')}])
 def test_invalid_model_structure(client, data):
     result = resolve(client, pending(client), {**analysis(), **data} if data else {}).json()

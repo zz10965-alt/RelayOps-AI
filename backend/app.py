@@ -382,8 +382,13 @@ def resolve(body: Resolve, authorization: str | None = Header(default=None)):
         reason = '商品不支持自动退货，需人工处理'
     elif facts['status'] != 'delivered' or not facts['delivered_on']:
         reason = '订单未签收，需人工处理'
-    elif not 0 <= (date.today()-date.fromisoformat(facts['delivered_on'])).days <= POLICY['return_window_days']:
-        reason = '不符合30天售后政策'
+    else:
+        try:
+            elapsed = (date.today()-date.fromisoformat(facts['delivered_on'])).days
+            if not 0 <= elapsed <= POLICY['return_window_days']:
+                reason = '不符合30天售后政策'
+        except (ValueError, TypeError):
+            reason = '订单签收日期无效，需人工核查'
     if reason:
         event(body.case_id, 'resolve', True, {'decision': 'handoff', 'reason': reason}, valid=True)
         finish(body.case_id, 'handoff', reason)
@@ -477,6 +482,17 @@ async def run_workflow(case_id, image, filename, mime):
                 except (ValueError, TypeError):
                     outcome = None
                 if isinstance(outcome, dict) and outcome.get('status') == 'handoff':
+                    if outcome.get('analysis') is not None:
+                        evidence = Analysis.model_validate(outcome['analysis'])
+                        # An early handoff may only carry rejected evidence. Never let a
+                        # terminal LLM statement invoke a positive business action.
+                        rejected = (evidence.order_id != row['order_id'] or evidence.image_quality != 'clear'
+                                    or not evidence.product_match or not evidence.damaged
+                                    or evidence.confidence < POLICY['min_confidence'])
+                        if not rejected:
+                            raise ValueError('提前交接不能携带可执行业务证据')
+                        resolve(Resolve(case_id=case_id, execution_token=token, analysis=evidence.model_dump_json()),
+                                authorization='Bearer '+os.environ['DIFY_TOOL_TOKEN'])
                     reason = 'Workflow requested human review; no backend action verified'
                     if outcome.get('requested_action') == 'provide_clear_photo':
                         reason = 'Please supply a clear product photo; workflow requested human review'
@@ -486,7 +502,7 @@ async def run_workflow(case_id, image, filename, mime):
             if current['status'] not in ('application_created', 'handoff'):
                 raise RuntimeError('Workflow 未产生经工具核验的结果')
             event(case_id, 'workflow', True, {'run_id': current['run_id'], 'status': data['status']})
-    except (httpx.HTTPError, ValueError, KeyError, TypeError, RuntimeError):
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, RuntimeError, sqlite3.Error):
         event(case_id, 'workflow', False, {'error': 'Dify 调用失败或返回结果不符合协议；检查服务端配置与工作流运行日志'})
         finish(case_id, 'handoff', 'Dify 执行失败或未调用核验工具，请人工核查')
     finally:

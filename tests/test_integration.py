@@ -5,6 +5,7 @@ import httpx
 import pytest
 from backend import app as module
 from tests.test_api import analysis, client, photo
+from tests.test_workflow import code_main
 
 
 @pytest.fixture
@@ -113,3 +114,41 @@ def test_malformed_run_id_handoffs(configured, monkeypatch, run_id):
     assert result['status']=='handoff' and result['application'] is None
     with module.db() as con:
         assert con.execute('SELECT execution_token FROM cases WHERE id=?',(result['id'],)).fetchone()[0] is None
+
+
+@pytest.mark.parametrize('changes', [
+    {'image_quality':'blurry'}, {'image_quality':'unrelated'}, {'product_match':False},
+    {'damaged':False}, {'confidence':0.79}, {'order_id':'CONFLICT'},
+])
+def test_workflow_negative_evidence_reaches_dashboard_without_action(configured, monkeypatch, changes):
+    """Execute packaged Code nodes + adapter + real temporary SQLite; vision/HTTP are substitutes."""
+    expected = analysis(**changes)
+    async def handler(request):
+        if request.url.path.endswith('files/upload'):
+            return httpx.Response(201, json={'id':'fixture-image'})
+        inputs = json.loads(request.content)['inputs']
+        parsed = code_main('parse')(json.dumps(expected), inputs['order_id'], inputs['case_id'], inputs['execution_token'])
+        assert parsed['route'] != 'eligible' and parsed['body'] == ''
+        output = code_main('supplement')(parsed['analysis'], parsed['route'])
+        return httpx.Response(200, json={'workflow_run_id':'mock-negative-run', 'data':{'status':'succeeded','outputs':output}})
+    transport(monkeypatch, handler)
+    result = submit(configured)
+    assert result['analysis'] == expected and result['status'] == 'handoff'
+    assert [s['status'] for s in result['stages']] == ['succeeded','succeeded','handoff','not_observed','not_observed']
+    assert result['application'] is None
+    assert not any(e['step'] in ('return_create','return_verify') for e in result['trace'])
+    with module.db() as con:
+        assert con.execute('SELECT count(*) FROM returns').fetchone()[0] == 0
+
+
+@pytest.mark.parametrize('evidence', [analysis(), {'confidence':0.1}, analysis(confidence=True)])
+def test_early_handoff_cannot_smuggle_positive_or_malformed_action(configured, monkeypatch, evidence):
+    async def handler(request):
+        if request.url.path.endswith('files/upload'):
+            return httpx.Response(201, json={'id':'fixture-image'})
+        return httpx.Response(200, json={'workflow_run_id':'mock-forged-output','data':{'status':'succeeded',
+            'outputs':{'result':json.dumps({'status':'handoff','analysis':evidence})}}})
+    transport(monkeypatch, handler)
+    result = submit(configured)
+    assert result['status'] == 'handoff' and result['application'] is None
+    assert any(e['step']=='workflow' and not e['success'] for e in result['trace'])

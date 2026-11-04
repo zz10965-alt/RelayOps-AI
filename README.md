@@ -1,5 +1,7 @@
 # RelayOps AI
 
+> 2026-11-03 Module 1 真实执行审计续作：已补齐早期交接证据传递及跨订单回读保护。本地 116 Python + 11 根路径 Chromium + 2 Pages Chromium 通过；真实 Dify/DeepSeek、Windows 与 HTTPS 回调尚未验收。当前修复未提交或部署。审计、测试区别及逐步操作见 [真实执行准备与验收](docs/module1-live-readiness.md)。
+
 ## 中文四页UI/UX审阅版（本地，尚未推送/部署）
 
 按用户参考图重做深紫导航、浅色卡片和中文交互：首页→场景/信息/运行引导→五阶段执行→独立处理结果。数据仍来自原Simulation/Live适配器，不复制参考图订单/政策/成功状态。四页与移动端截图、改动和测试结果见[中文UI审阅](docs/ui-redesign/README.md)。

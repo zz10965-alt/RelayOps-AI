@@ -76,3 +76,8 @@ Python最终79 passed/1既有弃用warning；前端tsc/Vite通过；浏览器最
 起始工作区干净、HEAD=a5e244f。按参考图组织四页：产品首页、三步引导、五阶段执行、独立结果；统一深紫导航、浅色卡片、线性SVG与中文可读文本。原数据/安全/模拟规则与部署配置字节保持，未使用设计图中的订单/商品/7天规则/成功状态。模拟即时返回不编造逐步进度，结果绿色核验仅基于匹配return_verify事件；技术JSON原文可展开。保留原8+Pages2场景，中文选择器/引导步骤相应迁移，新增四页/键盘/移动端与截图测试。首轮标题空格选择器失败已修正；390px导航确有10px溢出，检查DOM边界定位后改为五列，未隐藏横向溢出。最终99 Python/1既有warning、9根路径+2Pages浏览器、tsc/Vite两种构建及部署检查通过。8张PNG来自实际Simulation界面；无真实模型运行、真实凭据或用户数据。未commit/push/发布，未执行Module2/3，停供审阅。
 
 首页视觉反馈补充：用图像生成工具创作纸箱/封箱胶带/紫白机器人装饰插画，作为本地PNG打包，非业务证据；原图保留。9项界面+2项Pages、双构建与部署检查通过，PNG路径和解码受测试覆盖。未调用Dify/DeepSeek业务模型，未推送或部署。
+
+## Module 1 真实 Agent 链路审计续作（2026-11-03）
+基线 e425e14/work，起始干净。复用现有 Dify/DeepSeek、FastAPI/SQLite 与中文紫色四页界面。补齐早期负面视觉证据从 Dify 终端交接输出到后端的安全传递：严格复验、仅允许拒绝证据、实际订单/政策查询与确定性交接，不能触发创建。签收日期损坏明确交接；前端、Dify checker、只读 DB verifier 增强订单/申请/created/run_id 匹配；真实验收 CLI 增加新鲜合成订单和负面验收。
+最终116 Python通过（原99保留，1既有Starlette/httpx弃用warning）、11根路径Chromium与2Pages通过；tsc/根与Pages构建、部署静态、pip check、docs和diff检查通过。Dify HTTP及视觉结果为明确替身，真实本机业务API/临时SQLite实际执行；浏览器新增成功/交接展示为HTTP契约替身。Docker首次因指定CA文件不存在未运行构建，修正实际环境CA后镜像构建与无公开端口容器PORT/CORS/401/默认403/临时卷重启持久化通过，临时资源清理。
+离线预检exit2：DIFY_BASE_URL/API_KEY/TOOL_TOKEN缺失；未发真实模型请求。保留既有数据、图片、所有部署配置；无commit/push/redeploy/隧道/付费资源，无Module2/3。Windows、Dify新包导入、视觉兼容和真实HTTPS回调待用户配置与分别授权。完整清单/Windows命令/测试计划见docs/module1-live-readiness.md。

@@ -65,3 +65,8 @@
 
 ## 中文四页UI/UX重设计（2026-11-03）
 以用户参考图为视觉结构，不采用其业务数据；本地实现首页、三步引导、真实记录五阶段、独立结果及中文运营/人工/评估页面。DataClient、模拟逻辑、后端/数据库、策略、安全控制和Pages配置不变。99 Python、9项根路径Chromium、2项Pages Chromium、双构建及部署检查通过，截图见docs/ui-redesign/README.md；不推送、不部署、不运行真实模型，不开始Module2/3，待用户审阅。
+
+## Module 1 真实 Agent 链路审计续作（2026-11-03）
+基线 e425e14/work，起始干净。复用现有 Dify/DeepSeek、FastAPI/SQLite 与中文紫色四页界面。补齐早期负面视觉证据从 Dify 终端交接输出到后端的安全传递：严格复验、仅允许拒绝证据、实际订单/政策查询与确定性交接，不能触发创建。签收日期损坏明确交接；前端、Dify checker、只读 DB verifier 增强订单/申请/created/run_id 匹配；真实验收 CLI 增加新鲜合成订单和负面验收。
+最终116 Python通过（原99保留，1既有Starlette/httpx弃用warning）、11根路径Chromium与2Pages通过；tsc/根与Pages构建、部署静态、pip check、docs和diff检查通过。Dify HTTP及视觉结果为明确替身，真实本机业务API/临时SQLite实际执行；浏览器新增成功/交接展示为HTTP契约替身。Docker首次因指定CA文件不存在未运行构建，修正实际环境CA后镜像构建与无公开端口容器PORT/CORS/401/默认403/临时卷重启持久化通过，临时资源清理。
+离线预检exit2：DIFY_BASE_URL/API_KEY/TOOL_TOKEN缺失；未发真实模型请求。保留既有数据、图片、所有部署配置；无commit/push/redeploy/隧道/付费资源，无Module2/3。Windows、Dify新包导入、视觉兼容和真实HTTPS回调待用户配置与分别授权。完整清单/Windows命令/测试计划见docs/module1-live-readiness.md。

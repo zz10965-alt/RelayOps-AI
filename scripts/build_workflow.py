@@ -69,7 +69,7 @@ node('vision','llm','DeepSeek商品图片分析',
      variables=[], structured_output_enabled=False, error_strategy='fail-branch',
      retry_config={'retry_enabled':True,'max_retries':1,'retry_interval':500})
 code('parse','严格JSON解析与证据初筛',Path('workflows/parse_evidence.py').read_text(),
-     {'text':['vision','text'],'order_id':['start','order_id'],'case_id':['start','case_id'],'execution_token':['start','execution_token']}, ['route','body','reason'])
+     {'text':['vision','text'],'order_id':['start','order_id'],'case_id':['start','case_id'],'execution_token':['start','execution_token']}, ['route','body','analysis','reason'])
 node('evidence','if-else','证据分流：只有合格路径可执行',cases=[
     {'case_id':route,'logical_operator':'and','conditions':[{'id':route,'variable_selector':['parse','route'],'comparison_operator':'is','value':route}]}
     for route in ('eligible','supplement')])
@@ -78,7 +78,15 @@ code('verify','核对业务返回与数据库回读证据',Path('workflows/check
      {'body':['resolve','body'],'status_code':['resolve','status_code'],'case_id':['start','case_id'],'order_id':['start','order_id']}, ['verified','result'])
 gate('verified','是否获得合法后端结果',['verify','verified'],'yes')
 code('manual','人工交接：未确认业务成功','import json\ndef main() -> dict:\n    return {"result":json.dumps({"status":"handoff","reason":"配置、调用或证据验证未通过，转人工；未确认申请创建","application":None},ensure_ascii=False)}',{},['result'])
-code('supplement','请求补充清晰照片并交接','import json\ndef main() -> dict:\n    return {"result":json.dumps({"status":"handoff","requested_action":"provide_clear_photo","reason":"照片模糊，请补充清晰商品照片；未执行退货","application":None},ensure_ascii=False)}',{},['result'])
+code('supplement','保留拒绝证据并请求人工处理', '''import json
+def main(analysis: str = '', route: str = 'supplement') -> dict:
+    result={'status':'handoff','application':None}
+    if analysis:
+        result['analysis']=json.loads(analysis)
+    if route=='supplement':
+        result['requested_action']='provide_clear_photo'
+    return {'result':json.dumps(result,ensure_ascii=False)}''',
+     {'analysis':['parse','analysis'],'route':['parse','route']}, ['result'])
 for ident,title,selector in [('end','返回后端真实结果',['verify','result']),('end_manual','返回人工处理结果',['manual','result']),('end_supplement','返回补充资料请求',['supplement','result'])]:
     node(ident,'end',title,outputs=[{'variable':'result','value_selector':selector,'value_type':'string'}])
 for source,target,handle in [
@@ -86,7 +94,7 @@ for source,target,handle in [
  ('order','order_ok','source'),('order_ok','policy','true'),('order_ok','manual','false'),
  ('policy','policy_ok','source'),('policy_ok','vision','true'),('policy_ok','manual','false'),
  ('vision','parse','source'),('parse','evidence','source'),('evidence','resolve','eligible'),
- ('evidence','supplement','supplement'),('evidence','manual','false'),('resolve','verify','source'),
+ ('evidence','supplement','supplement'),('evidence','supplement','false'),('resolve','verify','source'),
  ('verify','verified','source'),('verified','end','true'),('verified','manual','false'),
  ('manual','end_manual','source'),('supplement','end_supplement','source')]: edge(source,target,handle)
 for ident in ('config','order','policy','vision','parse','resolve','verify'): edge(ident,'manual','fail-branch')

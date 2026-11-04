@@ -20,6 +20,7 @@ def main(body: str, status_code: int, case_id: str, order_id: str) -> dict:
             return failed
         if not any(isinstance(e, dict) and e.get('step') == 'return_verify' and e.get('success') == 1
                    and isinstance(e.get('detail'), dict) and e['detail'].get('id') == application['id']
+                   and e['detail'].get('order_id') == order_id
                    and e['detail'].get('status') == 'created' for e in data.get('trace', [])):
             return failed
         return {'verified': 'yes', 'result': json.dumps(data, ensure_ascii=False)}

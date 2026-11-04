@@ -44,7 +44,7 @@ function App({client,onOperator,onSimulation}:{client:DataClient;onOperator:()=>
  const stageIndex=pickedStage??lastObserved;
  const currentStage=observed[stageIndex];
  const running=detail&&['queued','running'].includes(detail.status);
- const verified=!!detail?.application&&detail.status==='application_created'&&detail.application.status==='created'&&detail.trace.some(e=>e.step==='return_verify'&&e.success&&(e.detail as Record<string,unknown>).id===detail.application?.id);
+ const verified=!!detail?.application&&detail.status==='application_created'&&detail.application.status==='created'&&detail.application.order_id===detail.order_id&&detail.trace.some(e=>e.step==='return_verify'&&e.success&&(e.detail as Record<string,unknown>).id===detail.application?.id&&(e.detail as Record<string,unknown>).order_id===detail.order_id&&(e.detail as Record<string,unknown>).status==='created');
  const decisionStage=observed.find(s=>s.name==='Decide');
  const resultTitle=verified?(simulated?'已创建模拟退货申请':'已创建退货申请'):detail?.status==='needs_information'?'请补充案件资料':detail?.status==='handoff'?'需要人工核查':running?'处理仍在进行':'结果尚待核验';
  const trace=detail&&<details className="panel trace-panel"><summary><Icon name="list"/><strong>查看执行日志</strong><span>Execution Trace · {detail.trace.length} 条{simulated?'模拟':''}记录</span></summary><p className="muted">{simulated?'以下为模拟事件与合成时间，没有真实HTTP请求或数据库写入。':'以下为后端真实事件；失败或未观测到的步骤不代表执行成功。'}</p>{detail.trace.map(item=><details className="trace-item" key={item.id}><summary><span className={item.success?'event-dot':'event-dot failed'}/><strong>{item.step}</strong><span>{time(item.created)} · {item.duration_ms>0?`${item.duration_ms.toFixed(0)} ms`:'耗时未测量'}</span></summary><pre>{JSON.stringify(item.detail,null,2)}</pre></details>)}</details>;
